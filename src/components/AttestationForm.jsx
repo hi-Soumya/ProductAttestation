@@ -3,7 +3,7 @@ import { ethers } from 'ethers';
 
 const SCHEMA_UID = '0xf7'; // Replace with your actual schema UID
 
-function AttestationForm({ signer, signSDK }) {
+function AttestationForm({ signer, signSDK, setNotification }) {
   const [formData, setFormData] = useState({
     instagramAccount: '',
     productName: '',
@@ -17,7 +17,7 @@ function AttestationForm({ signer, signSDK }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const encodedData = ethers.utils.defaultAbiCoder.encode(
+      const encodedData = ethers.AbiCoder.defaultAbiCoder().encode(
         ['string', 'string', 'string'],
         [formData.instagramAccount, formData.productName, formData.attestationId]
       );
@@ -35,11 +35,11 @@ function AttestationForm({ signer, signSDK }) {
       const newAttestationUID = await tx.wait();
 
       console.log('Attestation created:', newAttestationUID);
-      alert(`Product attested successfully! Attestation UID: ${newAttestationUID}`);
+      setNotification({ message: `Product attested successfully! Attestation UID: ${newAttestationUID}`, type: 'success' });
       setFormData({ instagramAccount: '', productName: '', attestationId: '' });
     } catch (error) {
       console.error('Error attesting product:', error);
-      alert('Error attesting product. Check console for details.');
+      setNotification({ message: 'Error attesting product: ' + error.message, type: 'error' });
     }
   };
 
