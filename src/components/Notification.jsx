@@ -1,6 +1,6 @@
 import React from 'react';
 
-const Notification = ({ message, type }) => {
+function Notification({ message, type }) {
   if (!message) return null;
 
   return (
@@ -8,6 +8,6 @@ const Notification = ({ message, type }) => {
       {message}
     </div>
   );
-};
+}
 
 export default Notification;

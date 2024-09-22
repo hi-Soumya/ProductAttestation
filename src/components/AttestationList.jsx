@@ -1,43 +1,33 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
-function AttestationList({ signSDK }) {
+const SCHEMA_UID = 'onchain_evm_421614_0xf6'; // Make sure this matches your schema UID
+const API_BASE_URL = 'https://testnets-api.sign.global';
+
+function AttestationList({ setNotification }) {
   const [attestations, setAttestations] = useState([]);
 
   useEffect(() => {
     const fetchAttestations = async () => {
       try {
-        const filter = await signSDK.getSchemaAttestations({
-          schemaUID: '0xf7', // Replace with your actual schema UID
-        });
-
-        const fetchedAttestations = await Promise.all(
-          filter.map(async (attestation) => {
-            const decodedData = signSDK.decodeData(attestation.data);
-            return {
-              uid: attestation.uid,
-              data: decodedData,
-            };
-          })
-        );
-
-        setAttestations(fetchedAttestations);
+        const response = await axios.get(`${API_BASE_URL}/v1/attestations?schema=${SCHEMA_UID}`);
+        setAttestations(response.data);
       } catch (error) {
         console.error('Error fetching attestations:', error);
+        setNotification({ message: 'Error fetching attestations: ' + error.message, type: 'error' });
       }
     };
 
-    if (signSDK) {
-      fetchAttestations();
-    }
-  }, [signSDK]);
+    fetchAttestations();
+  }, [setNotification]);
 
   return (
     <div>
       <h2>Recent Attestations</h2>
       <ul>
         {attestations.map((attestation) => (
-          <li key={attestation.uid}>
-            {attestation.data[1]} by {attestation.data[0]} (ID: {attestation.data[2]})
+          <li key={attestation.id}>
+            {attestation.data.productName} by {attestation.data.instagramAccountHandle} (ID: {attestation.data.attestationId})
           </li>
         ))}
       </ul>

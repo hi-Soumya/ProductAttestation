@@ -2,24 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import AttestationForm from './components/AttestationForm.jsx';
 import AttestationList from './components/AttestationList.jsx';
-import { connectSignProtocol } from './utils/signProtocol.js';
-import './App.css';
 import Notification from './components/Notification.jsx';
+import './App.css';
 
 function App() {
   const [signer, setSigner] = useState(null);
-  const [signSDK, setSignSDK] = useState(null);
   const [address, setAddress] = useState(null);
   const [notification, setNotification] = useState({ message: '', type: '' });
 
   useEffect(() => {
-    const connectWallet = async () => {
+    const initializeApp = async () => {
       if (typeof window.ethereum !== 'undefined') {
         try {
           await window.ethereum.request({ method: 'eth_requestAccounts' });
           const provider = new ethers.BrowserProvider(window.ethereum);
           
-          // Switch to Arbitrum Sepolia
+          // Switch to Arbitrum Sepolia (chainId: 421614)
           try {
             await window.ethereum.request({
               method: 'wallet_switchEthereumChain',
@@ -28,26 +26,22 @@ function App() {
           } catch (switchError) {
             // This error code indicates that the chain has not been added to MetaMask.
             if (switchError.code === 4902) {
-              try {
-                await window.ethereum.request({
-                  method: 'wallet_addEthereumChain',
-                  params: [
-                    {
-                      chainId: '0x66eee',
-                      chainName: 'Arbitrum Sepolia',
-                      nativeCurrency: {
-                        name: 'Ethereum',
-                        symbol: 'ETH',
-                        decimals: 18
-                      },
-                      rpcUrls: ['https://sepolia-rollup.arbitrum.io/rpc'],
-                      blockExplorerUrls: ['https://sepolia-explorer.arbitrum.io/']
-                    }
-                  ],
-                });
-              } catch (addError) {
-                throw new Error("Failed to add Arbitrum Sepolia network");
-              }
+              await window.ethereum.request({
+                method: 'wallet_addEthereumChain',
+                params: [
+                  {
+                    chainId: '0x66eee',
+                    chainName: 'Arbitrum Sepolia',
+                    nativeCurrency: {
+                      name: 'Ethereum',
+                      symbol: 'ETH',
+                      decimals: 18
+                    },
+                    rpcUrls: ['https://sepolia-rollup.arbitrum.io/rpc'],
+                    blockExplorerUrls: ['https://sepolia-explorer.arbitrum.io/']
+                  }
+                ],
+              });
             } else {
               throw switchError;
             }
@@ -57,11 +51,12 @@ function App() {
           setSigner(signer);
           const address = await signer.getAddress();
           setAddress(address);
-          const sdk = await connectSignProtocol(signer);
-          setSignSDK(sdk);
+
+          console.log("Wallet connected successfully");
+
         } catch (error) {
           console.error('Failed to connect wallet:', error);
-          setNotification({ message: 'Failed to connect wallet: ' + error.message, type: 'error' });
+          setNotification({ message: 'Failed to connect: ' + error.message, type: 'error' });
         }
       } else {
         console.error('MetaMask not detected');
@@ -69,20 +64,20 @@ function App() {
       }
     };
 
-    connectWallet();
+    initializeApp();
   }, []);
 
   return (
     <div className="App">
-      <h1>Product Attestation with Sign Protocol</h1>
+      <h1>Product Attestation with Sign Protocol API</h1>
       <Notification message={notification.message} type={notification.type} />
       {address ? (
         <>
           <p>Connected Address: {address}</p>
-          {signer && signSDK && (
+          {signer && (
             <>
-              <AttestationForm signer={signer} signSDK={signSDK} setNotification={setNotification} />
-              <AttestationList signSDK={signSDK} setNotification={setNotification} />
+              <AttestationForm signer={signer} setNotification={setNotification} />
+              <AttestationList setNotification={setNotification} />
             </>
           )}
         </>

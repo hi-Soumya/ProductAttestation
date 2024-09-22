@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { ethers } from 'ethers';
+import axios from 'axios';
 
-const SCHEMA_UID = '0xf7'; // Replace with your actual schema UID
+const SCHEMA_UID = 'onchain_evm_421614_0xf6'; // Make sure this is the correct, full UID
+const API_BASE_URL = 'https://testnet-scan.sign.global/schema/onchain_evm_421614_0xf6';
 
-function AttestationForm({ signer, signSDK, setNotification }) {
+function AttestationForm({ signer, setNotification }) {
   const [formData, setFormData] = useState({
     instagramAccount: '',
     productName: '',
@@ -17,25 +18,30 @@ function AttestationForm({ signer, signSDK, setNotification }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const encodedData = ethers.AbiCoder.defaultAbiCoder().encode(
-        ['string', 'string', 'string'],
-        [formData.instagramAccount, formData.productName, formData.attestationId]
-      );
-
-      const tx = await signSDK.attest({
+      const signerAddress = await signer.getAddress();
+      
+      // Prepare the message to be signed
+      const message = JSON.stringify({
         schema: SCHEMA_UID,
         data: {
-          recipient: await signer.getAddress(),
-          expirationTime: 0,
-          revocable: true,
-          data: encodedData,
+          instagramAccountHandle: formData.instagramAccount,
+          productName: formData.productName,
+          attestationId: formData.attestationId,
         },
+        recipient: signerAddress,
       });
 
-      const newAttestationUID = await tx.wait();
+      // Sign the message
+      const signature = await signer.signMessage(message);
 
-      console.log('Attestation created:', newAttestationUID);
-      setNotification({ message: `Product attested successfully! Attestation UID: ${newAttestationUID}`, type: 'success' });
+      // Make the API call
+      const response = await axios.post(`${API_BASE_URL}/v1/attestations`, {
+        message: message,
+        signature: signature,
+      });
+
+      console.log('Attestation created:', response.data);
+      setNotification({ message: `Product attested successfully! Transaction hash: ${response.data.transactionHash}`, type: 'success' });
       setFormData({ instagramAccount: '', productName: '', attestationId: '' });
     } catch (error) {
       console.error('Error attesting product:', error);
