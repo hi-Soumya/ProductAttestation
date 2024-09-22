@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const SCHEMA_UID = 'onchain_evm_421614_0xf6'; // Make sure this is the correct, full UID
+const SCHEMA_UID = 'onchain_evm_421614_0xf6'; 
 const API_BASE_URL = 'https://testnet-scan.sign.global/schema/onchain_evm_421614_0xf6';
 
 function AttestationForm({ signer, setNotification }) {
