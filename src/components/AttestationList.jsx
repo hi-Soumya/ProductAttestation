@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const SCHEMA_UID = 'onchain_evm_421614_0xf6'; // Make sure this matches your schema UID
+const SCHEMA_UID = 'onchain_evm_421614_0xf6'; 
 const API_BASE_URL = 'https://testnets-api.sign.global';
 
 function AttestationList({ setNotification }) {
